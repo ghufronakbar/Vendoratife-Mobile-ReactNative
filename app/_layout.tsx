@@ -33,11 +33,11 @@ export default function Layout() {
     <>
       <Stack>
         <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="reset-password" options={{ headerShown: false }} />
-        <Stack.Screen name="welcome" options={{ headerShown: false }} />
+        <Stack.Screen name="reset-password" options={{ headerShown: false }} />        
         <Stack.Screen name="login" options={{ headerShown: false }} />
         <Stack.Screen name="register" options={{ headerShown: false }} />
-        <Stack.Screen name="(admin)" options={{ headerShown: false }} />
+        <Stack.Screen name="(admin)/(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="(admin)/(page)" options={{ headerShown: false }} />
         <Stack.Screen
           name="change-password"
           options={{

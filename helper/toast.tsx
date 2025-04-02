@@ -15,8 +15,8 @@ export const toastSuccess = (message?: unknown) => {
   }
   Toast.show({
     type: "success",
-    text1: "Successfull",
-    text2: msg || "Success",
+    text1: "Berhasil",
+    text2: msg || "Berhasil",
   });
 };
 
@@ -33,21 +33,21 @@ export const toastError = (message?: unknown) => {
   Toast.show({
     type: "error",
     text1: "Error",
-    text2: msg || "Something went wrong",
+    text2: msg || "Terjadi Kesalahan",
   });
 };
 
 export const toastFill = () =>
   Toast.show({
     type: "error",
-    text1: "Complete data",
-    text2: "Fill in all fields",
+    text1: "Lengkapi data",
+    text2: "Harap lengkapi semua data",
   });
 
-export const toastLoading = () => {
+export const toastLoading = (msg?: string) => {
   Toast.show({
     type: "info",
     text1: "Loading..",
-    text2: "Please wait",
+    text2: msg || "Harap tunggu sebentar",
   });
 };

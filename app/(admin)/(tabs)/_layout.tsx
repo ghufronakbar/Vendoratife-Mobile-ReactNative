@@ -68,9 +68,9 @@ export default function LayoutHome() {
           }}
         />
         <Tabs.Screen
-          name="partner"
+          name="account"
           options={{
-            tabBarLabel: "Partner",
+            tabBarLabel: "Account",
             headerShown: false,
             tabBarLabelStyle: {
               fontFamily: "Outfit-SemiBold",

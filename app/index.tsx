@@ -34,9 +34,9 @@ const useAuth = () => {
     const role = await AsyncStorage.getItem(ROLE);
     if (token && role) {
       if (role === "Admin") {
-        router.replace("/(admin)");
+        router.replace("/(admin)/(tabs)");
       } else if (role === "Employee") {
-        router.replace("/(employee)");
+        router.replace("/(employee)/(tabs)");
       }
     } else {
       router.replace("/login");
