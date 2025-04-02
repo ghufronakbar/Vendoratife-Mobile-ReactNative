@@ -1,6 +1,6 @@
 import { router, Stack } from "expo-router";
 import "react-native-reanimated";
-import { Platform, TouchableOpacity } from "react-native";
+import { TouchableOpacity } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import Toast from "react-native-toast-message";
 import { C } from "@/constants/Colors";
@@ -43,6 +43,14 @@ const AdminPageLayout = () => {
         <Stack.Screen
           name="form-product"
           options={{ title: "Form Product", headerShown: true }}
+        />
+        <Stack.Screen
+          name="form-partner"
+          options={{ title: "Form Partner", headerShown: true }}
+        />
+        <Stack.Screen
+          name="form-user"
+          options={{ title: "Form User", headerShown: true }}
         />
       </Stack>
       <Toast />

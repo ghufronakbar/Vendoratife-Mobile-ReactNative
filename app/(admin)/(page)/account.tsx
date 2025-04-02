@@ -66,38 +66,14 @@ const AccountScreen = () => {
             data={partners}
             keyExtractor={(item, index) => index.toString()}
             contentContainerStyle={{ paddingHorizontal: 16 }}
-            renderItem={({ item }) => (
-              <ListPartner
-                item={item}
-                onPress={() =>
-                  router.push({
-                    pathname: "/(admin)/(page)/form-partner",
-                    params: {
-                      id: item.id,
-                    },
-                  })
-                }
-              />
-            )}
+            renderItem={({ item }) => <ListPartner item={item} />}
           />
         ) : (
           <FlatList
             data={users}
             keyExtractor={(item, index) => index.toString()}
             contentContainerStyle={{ paddingHorizontal: 16 }}
-            renderItem={({ item }) => (
-              <ListUser
-                item={item}
-                onPress={() =>
-                  router.push({
-                    pathname: "/(admin)/(page)/form-user",
-                    params: {
-                      id: item.id,
-                    },
-                  })
-                }
-              />
-            )}
+            renderItem={({ item }) => <ListUser item={item} />}
           />
         )}
         <FloatingAddButton
@@ -116,14 +92,12 @@ const AccountScreen = () => {
 
 interface ListUserProps {
   item: User;
-  onPress: () => void;
 }
-const ListUser: React.FC<ListUserProps> = ({ item, onPress }) => {
+const ListUser: React.FC<ListUserProps> = ({ item }) => {
   return (
     <Pressable
       className="w-full h-fit bg-white mb-2 border border-gray-200 rounded-2xl shadow-md overflow-hidden py-2 px-2"
       style={{ elevation: 5 }}
-      onPress={onPress}
     >
       <View className="flex flex-row items-center ">
         <Img
@@ -149,14 +123,12 @@ const ListUser: React.FC<ListUserProps> = ({ item, onPress }) => {
 
 interface ListPartnerProps {
   item: Partner;
-  onPress: () => void;
 }
-const ListPartner: React.FC<ListPartnerProps> = ({ item, onPress }) => {
+const ListPartner: React.FC<ListPartnerProps> = ({ item }) => {
   return (
     <Pressable
       className="w-full h-fit bg-white mb-2 border border-gray-200 rounded-2xl shadow-md overflow-hidden py-2 px-2"
       style={{ elevation: 5 }}
-      onPress={onPress}
     >
       <View className="flex flex-row items-center ">
         <Img
