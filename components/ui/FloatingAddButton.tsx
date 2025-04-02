@@ -10,7 +10,7 @@ export const FloatingAddButton: React.FC<Props> = ({ onPress }) => {
   return (
     <TouchableOpacity
       onPress={() => onPress?.()}
-      className="absolute bottom-16 right-6 z-10"
+      className="absolute bottom-28 right-6 z-10"
       style={{
         backgroundColor: C[1],
         borderRadius: 20,

@@ -52,6 +52,10 @@ const AdminPageLayout = () => {
           name="form-user"
           options={{ title: "Form User", headerShown: true }}
         />
+        <Stack.Screen
+          name="form-order"
+          options={{ title: "Buat Pesanan", headerShown: true }}
+        />
       </Stack>
       <Toast />
     </>

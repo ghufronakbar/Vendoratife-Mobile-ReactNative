@@ -31,7 +31,7 @@ const AccountScreen = () => {
   } = useOrders();
   return (
     <RefreshControl refreshing={loading} onRefresh={fetchData}>
-      <SafeAreaView className="bg-white min-h-screen">
+      <SafeAreaView className="bg-white h-full">
         <ThemedText
           type="title"
           className="line-clamp-1 py-6 px-4 text-center font-omedium"

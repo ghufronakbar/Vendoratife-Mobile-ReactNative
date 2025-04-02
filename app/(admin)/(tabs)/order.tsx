@@ -35,7 +35,7 @@ const OrderScreen = () => {
   } = useOrders();
   return (
     <RefreshControl refreshing={loading} onRefresh={fetchData}>
-      <SafeAreaView className="bg-white min-h-screen">
+      <SafeAreaView className="bg-white h-full">
         <ThemedText
           type="title"
           className="line-clamp-1 py-6 px-4 text-center font-omedium"
@@ -160,10 +160,14 @@ const ListOrder: React.FC<ListOrderProps> = ({
         </View>
       </View>
       {expanded && (
-        <View className="flex flex-col mt-2">
-          <View className="flex flex-col">
+        <View className="flex flex-col">
+          <View className="flex flex-col mt-2">
             <ThemedText className="text-black">Alamat:</ThemedText>
             <ThemedText>{item.partner.address}</ThemedText>
+          </View>
+          <View className="flex flex-col mt-2">
+            <ThemedText className="text-black">Catatan:</ThemedText>
+            <ThemedText>{item.note || "-"}</ThemedText>
           </View>
           <View className="flex flex-row justify-between items-end mt-2 w-full">
             <View className="w-[60%] flex flex-col items-start">
