@@ -1,16 +1,10 @@
 import { ThemedText } from "@/components/ThemedText";
-import { Img } from "@/components/ui/Img";
-import api from "@/config/api";
 import { C } from "@/constants/Colors";
 import { useProfile } from "@/hooks/useProfile";
-import { Api } from "@/models/Response";
-import formatDate from "@/utils/formatDate";
-import formatRupiah from "@/utils/formatRupiah";
 import { Entypo, Ionicons, MaterialIcons } from "@expo/vector-icons";
-import { router, useFocusEffect } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { router } from "expo-router";
+import { useState } from "react";
 import {
-  FlatList,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -21,7 +15,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 const HomeScreen = () => {
   const { profile, signOut } = useProfile();
-  const { goToProfile, isSetting, toggleSetting } = useHome();
+  const { goToProfile, isSetting, toggleSetting, goToChange } = useHome();
 
   return (
     <SafeAreaView className="h-full bg-white">
@@ -43,7 +37,7 @@ const HomeScreen = () => {
           </ThemedText>
           <Entypo name="chevron-thin-down" size={18} />
           {isSetting && (
-            <View className="w-40 h-fit bg-white absolute -bottom-14 z-20 flex flex-col border border-[#F5F5F5] rounded-lg">
+            <View className="w-40 h-fit bg-white absolute -bottom-24 z-20 flex flex-col border border-[#F5F5F5] rounded-lg">
               <TouchableOpacity
                 className="flex flex-row items-center px-2 py-1 space-x-2 border-b border-[#F5F5F5]"
                 onPress={goToProfile}
@@ -51,6 +45,15 @@ const HomeScreen = () => {
                 <Ionicons name="person" />
                 <ThemedText className="text-black text-lg">
                   Edit Profile
+                </ThemedText>
+              </TouchableOpacity>
+              <TouchableOpacity
+                className="flex flex-row items-center px-2 py-1 space-x-2 border-b border-[#F5F5F5]"
+                onPress={goToChange}
+              >
+                <Ionicons name="lock-closed" color={"#ffa500"} />
+                <ThemedText className="text-black text-lg">
+                  Ubah Password
                 </ThemedText>
               </TouchableOpacity>
               <TouchableOpacity
@@ -171,9 +174,16 @@ const useHome = () => {
   const [isSetting, setIsSetting] = useState(false);
 
   const toggleSetting = () => setIsSetting(!isSetting);
-  const goToProfile = () => router.push("/(admin)/(page)/profile");
+  const goToProfile = () => {
+    setIsSetting(false);
+    router.push("/(admin)/(page)/profile");
+  };
+  const goToChange = () => {
+    setIsSetting(false);
+    router.push("/(admin)/(page)/change-password");
+  };
 
-  return { isSetting, toggleSetting, goToProfile };
+  return { isSetting, toggleSetting, goToProfile, goToChange };
 };
 
 export default HomeScreen;

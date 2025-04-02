@@ -35,7 +35,7 @@ const HomeOrderScreen = () => {
     trackOrder,
   } = useOrders();
 
-  const { goToProfile, isSetting, toggleSetting } = useHome();
+  const { goToProfile, isSetting, toggleSetting, goToChange } = useHome();
   const { profile, signOut } = useProfile();
   return (
     <RefreshControl refreshing={loading} onRefresh={fetchData}>
@@ -52,7 +52,7 @@ const HomeOrderScreen = () => {
           </ThemedText>
           <Entypo name="chevron-thin-down" size={18} />
           {isSetting && (
-            <View className="w-40 h-fit bg-white absolute -bottom-14 z-20 flex flex-col border border-[#F5F5F5] rounded-lg">
+            <View className="w-40 h-fit bg-white absolute -bottom-24 z-20 flex flex-col border border-[#F5F5F5] rounded-lg">
               <TouchableOpacity
                 className="flex flex-row items-center px-2 py-1 space-x-2 border-b border-[#F5F5F5]"
                 onPress={goToProfile}
@@ -60,6 +60,15 @@ const HomeOrderScreen = () => {
                 <Ionicons name="person" />
                 <ThemedText className="text-black text-lg">
                   Edit Profile
+                </ThemedText>
+              </TouchableOpacity>
+              <TouchableOpacity
+                className="flex flex-row items-center px-2 py-1 space-x-2 border-b border-[#F5F5F5]"
+                onPress={goToChange}
+              >
+                <Ionicons name="lock-closed" color={"#ffa500"} />
+                <ThemedText className="text-black text-lg">
+                  Ubah Password
                 </ThemedText>
               </TouchableOpacity>
               <TouchableOpacity
@@ -303,9 +312,16 @@ const useHome = () => {
   const [isSetting, setIsSetting] = useState(false);
 
   const toggleSetting = () => setIsSetting(!isSetting);
-  const goToProfile = () => router.push("/(admin)/(page)/profile");
+  const goToProfile = () => {
+    setIsSetting(false);
+    router.push("/(employee)/(page)/profile");
+  };
+  const goToChange = () => {
+    setIsSetting(false);
+    router.push("/(employee)/(page)/change-password");
+  };
 
-  return { isSetting, toggleSetting, goToProfile };
+  return { isSetting, toggleSetting, goToProfile, goToChange };
 };
 
 export default HomeOrderScreen;

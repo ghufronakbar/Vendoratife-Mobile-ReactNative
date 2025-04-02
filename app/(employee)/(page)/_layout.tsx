@@ -48,6 +48,14 @@ const EmployeePageLayout = () => {
           name="form-order"
           options={{ title: "Buat Pesanan", headerShown: true }}
         />
+        <Stack.Screen
+          name="profile"
+          options={{ title: "Edit Profile", headerShown: true }}
+        />
+        <Stack.Screen
+          name="change-password"
+          options={{ title: "Ubah Password", headerShown: true }}
+        />
       </Stack>
       <Toast />
     </>

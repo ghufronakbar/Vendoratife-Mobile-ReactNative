@@ -7,45 +7,37 @@ import {
   Pressable,
 } from "react-native";
 import { ThemedText } from "@/components/ThemedText";
-import { router, useLocalSearchParams, useNavigation } from "expo-router";
+import { router, useNavigation } from "expo-router";
 import FormInput from "@/components/ui/FormInput";
 import LoadingView from "@/components/ui/LoadingView";
-import SelectImage from "@/components/ui/SelectImage";
-import { Ionicons } from "@expo/vector-icons";
 import { toastError, toastSuccess } from "@/helper/toast";
 import api from "@/config/api";
 import { Api } from "@/models/Response";
 import { User } from "@/models/User";
-import { Dropdown } from "react-native-element-dropdown";
-import ModalConfirmation from "@/components/ui/ModalConfirmation";
 import { CountryPicker } from "react-native-country-codes-picker";
 import { TextInput } from "react-native-paper";
+import SelectRoundImage from "@/components/ui/SelectRoundImage";
 
-const FormUser = () => {
+const ProfileScreen = () => {
   const {
     form,
     loading,
     onChange,
     handleSubmit,
     pending,
-    id,
-    Confirmation,
     CountryCode,
     onClickCountry,
-    ROLES,
-  } = useUser();
+  } = useProfile();
 
   if (loading) return <LoadingView />;
 
   return (
     <ScrollView className="px-5 flex-1 bg-white min-h-screen">
       <View>
-        <View className="flex-row">
-          <ThemedText className="text-3xl font-obold">Yuk, </ThemedText>
-          <ThemedText className="text-3xl font-obold text-custom-1">
-            Lengkapi Data
-          </ThemedText>
-        </View>
+        <SelectRoundImage
+          image={form.image}
+          onChangeImage={(value) => onChange("image", value)}
+        />
         <View className="flex flex-col space-y-2 mt-4">
           <FormInput
             label="Nama"
@@ -87,59 +79,11 @@ const FormUser = () => {
             onChangeText={(text) => onChange("address", text)}
             rows={5}
           />
-          <View className="bg-white z-10 w-10 h-4 -mb-4 ml-2">
-            <ThemedText className="ml-1 text-gray-700 font-oregular text-xs">
-              Role Akun
-            </ThemedText>
-          </View>
-          <Dropdown
-            data={ROLES}
-            labelField="label"
-            valueField="value"
+          <FormInput
+            label="Role Akun"
             value={form.role}
-            onChange={(item) => onChange("role", item.value)}
-            search={false}
-            placeholder="Pilih Role"
-            placeholderStyle={{
-              fontFamily: "Outfit-Regular",
-              fontSize: 16,
-              color: "#181D27",
-            }}
-            itemTextStyle={{
-              fontFamily: "Outfit-Regular",
-              fontSize: 16,
-              color: "#181D27",
-            }}
-            containerStyle={{
-              backgroundColor: "white",
-              borderRadius: 10,
-              borderWidth: 0,
-            }}
-            itemContainerStyle={{
-              borderRadius: 10,
-            }}
-            activeColor={"#f0f0f0"}
-            selectedTextStyle={{
-              fontFamily: "Outfit-Regular",
-              fontSize: 16,
-              color: "#181D27",
-            }}
-            style={{
-              borderColor: "#A0A0A0",
-              borderWidth: 1,
-              borderRadius: 10,
-              padding: 12,
-              marginBottom: 8,
-            }}
-          />
-          <View className="z-10 w-15 h-4 -mb-1 ml-2">
-            <ThemedText className="ml-1 text-gray-700 font-oregular text-xs">
-              Foto Profile
-            </ThemedText>
-          </View>
-          <SelectImage
-            image={form.image}
-            onChangeImage={(value) => onChange("image", value)}
+            onChangeText={(text) => onChange("role", text)}
+            editable={false}
           />
 
           <TouchableOpacity
@@ -147,19 +91,12 @@ const FormUser = () => {
             className="mb-4 p-3 flex items-center justify-center rounded-lg bg-custom-1 mt-4"
           >
             <ThemedText className="text-white font-oregular text-lg">
-              {pending ? (
-                <ActivityIndicator color="white" />
-              ) : id ? (
-                "Simpan"
-              ) : (
-                "Tambahkan"
-              )}
+              {pending ? <ActivityIndicator color="white" /> : "Simpan"}
             </ThemedText>
           </TouchableOpacity>
           <View className="h-60 w-full bg-transparent" />
         </View>
       </View>
-      <Confirmation />
       <CountryCode />
     </ScrollView>
   );
@@ -185,32 +122,13 @@ const initUserDTO: UserDTO = {
   image: null,
 };
 
-const useUser = () => {
+const useProfile = () => {
   const [loading, setLoading] = useState(false);
   const [pending, setPending] = useState(false);
-  const [openDel, setOpenDel] = useState(false);
   const [openCountry, setOpenCountry] = useState(false);
   const [form, setForm] = useState(initUserDTO);
-  const id = (useLocalSearchParams().id as string) || "";
+
   useNavigation().setOptions({
-    title: id ? "Edit Akun" : "Tambah Akun",
-    headerRight: () =>
-      !id ? null : (
-        <TouchableOpacity
-          onPress={onClickDel}
-          style={{
-            padding: 12,
-            position: "relative",
-            zIndex: 10,
-            borderRadius: 16,
-            marginRight: 6,
-            marginVertical: 32,
-            backgroundColor: "white",
-          }}
-        >
-          <Ionicons name="trash-outline" size={26} color={"#F44336"} />
-        </TouchableOpacity>
-      ),
     headerShown: !loading,
   });
 
@@ -229,10 +147,6 @@ const useUser = () => {
     />
   );
 
-  const onClickDel = () => {
-    setOpenDel(!openDel);
-  };
-
   const onChange = (key: keyof UserDTO, value: string | null) => {
     setForm({ ...form, [key]: value });
   };
@@ -240,7 +154,7 @@ const useUser = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const res = await api.get<Api<User>>(`/users/${id}`);
+      const res = await api.get<Api<User>>(`/account`);
       setForm({
         ...res.data.data,
       });
@@ -252,10 +166,8 @@ const useUser = () => {
   };
 
   useEffect(() => {
-    if (id) {
-      fetchData();
-    }
-  }, [id]);
+    fetchData();
+  }, []);
 
   const handleSubmit = async () => {
     try {
@@ -266,29 +178,7 @@ const useUser = () => {
       });
       if (pending || loading) return;
       setPending(true);
-      if (id) {
-        const res = await api.put<Api<User>>(`/users/${id}`, form);
-        toastSuccess(res?.data?.message);
-      } else {
-        const res = await api.post<Api<User>>("/users", form);
-        toastSuccess(res?.data?.message);
-      }
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      router.back();
-    } catch (error) {
-      console.log(error);
-      toastError(error);
-    } finally {
-      setPending(false);
-    }
-  };
-
-  const handleDelete = async () => {
-    try {
-      if (pending || loading) return;
-      setPending(true);
-      onClickDel();
-      const res = await api.delete<Api<User>>(`/users/${id}`);
+      const res = await api.put<Api<User>>("/account", form);
       toastSuccess(res?.data?.message);
       await new Promise((resolve) => setTimeout(resolve, 1000));
       router.back();
@@ -300,37 +190,15 @@ const useUser = () => {
     }
   };
 
-  const Confirmation = () => (
-    <ModalConfirmation
-      onConfirm={handleDelete}
-      setShowAlert={setOpenDel}
-      showAlert={openDel}
-    />
-  );
-
-  const ROLES = [
-    {
-      label: "Admin",
-      value: "Admin",
-    },
-    {
-      label: "Pegawai",
-      value: "Employee",
-    },
-  ];
-
   return {
     form,
     onChange,
     loading,
     handleSubmit,
     pending,
-    id,
-    Confirmation,
     onClickCountry,
     CountryCode,
-    ROLES,
   };
 };
 
-export default FormUser;
+export default ProfileScreen;
