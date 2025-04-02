@@ -1,12 +1,8 @@
 import { ThemedText } from "@/components/ThemedText";
 import FormInput from "@/components/ui/FormInput";
 import api from "@/config/api";
-import { ACCESS_TOKEN, ROLE } from "@/constants/AsyncStorage";
 import { toastError, toastLoading, toastSuccess } from "@/helper/toast";
-import { useProfile } from "@/hooks/useProfile";
 import { Api } from "@/models/Response";
-import { User } from "@/models/User";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import { useRef, useState } from "react";
 import {

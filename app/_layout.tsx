@@ -38,6 +38,7 @@ export default function Layout() {
         <Stack.Screen name="register" options={{ headerShown: false }} />
         <Stack.Screen name="(admin)/(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="(admin)/(page)" options={{ headerShown: false }} />
+        <Stack.Screen name="(employee)/(page)" options={{ headerShown: false }} />
         <Stack.Screen
           name="change-password"
           options={{
@@ -48,29 +49,7 @@ export default function Layout() {
               fontFamily: "Outfit-SemiBold",
             },
           }}
-        />
-        <Stack.Screen
-          name="request-withdrawal"
-          options={{
-            headerShown: true,
-            title: "Request Withdrawal",
-            headerTitleStyle: {
-              color: "#000000",
-              fontFamily: "Outfit-SemiBold",
-            },
-          }}
-        />
-        <Stack.Screen
-          name="create-auction"
-          options={{
-            headerShown: true,
-            title: "Create Auction",
-            headerTitleStyle: {
-              color: "#000000",
-              fontFamily: "Outfit-SemiBold",
-            },
-          }}
-        />
+        />        
         <Stack.Screen
           name="profile"
           options={{
@@ -82,16 +61,6 @@ export default function Layout() {
             },
           }}
         />
-
-        {/* <Stack.Screen
-          name="detail-cost"
-          options={{
-            title: "",
-            headerTintColor: "#FFFFFF",
-            headerTransparent: true,
-            headerStyle: { backgroundColor: "transparent" },
-          }}
-        /> */}
       </Stack>
       <Toast />
     </>

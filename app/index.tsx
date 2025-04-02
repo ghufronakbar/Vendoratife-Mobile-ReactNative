@@ -36,7 +36,7 @@ const useAuth = () => {
       if (role === "Admin") {
         router.replace("/(admin)/(tabs)");
       } else if (role === "Employee") {
-        router.replace("/(employee)/(tabs)");
+        router.replace("/(employee)/(page)");
       }
     } else {
       router.replace("/login");
