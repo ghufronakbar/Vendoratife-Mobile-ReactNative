@@ -16,7 +16,6 @@ import { toastError, toastSuccess } from "@/helper/toast";
 import api from "@/config/api";
 import { Api } from "@/models/Response";
 import { Partner } from "@/models/Partner";
-import { Dropdown } from "react-native-element-dropdown";
 import ModalConfirmation from "@/components/ui/ModalConfirmation";
 import { CountryPicker } from "react-native-country-codes-picker";
 import { TextInput } from "react-native-paper";
@@ -85,51 +84,6 @@ const FormPartner = () => {
             onChangeText={(text) => onChange("address", text)}
             rows={5}
           />
-          {/* <View className="bg-white z-10 w-10 h-4 -mb-4 ml-2">
-            <ThemedText className="ml-1 text-gray-700 font-oregular text-xs">
-              Satuan
-            </ThemedText>
-          </View>
-          <Dropdown
-            data={UNITS}
-            labelField="label"
-            valueField="value"
-            value={form.unit}
-            onChange={(item) => onChange("unit", item.value)}
-            search={false}
-            placeholder="Pilih Satuan"
-            placeholderStyle={{
-              fontFamily: "Outfit-Regular",
-              fontSize: 16,
-              color: "#181D27",
-            }}
-            itemTextStyle={{
-              fontFamily: "Outfit-Regular",
-              fontSize: 16,
-              color: "#181D27",
-            }}
-            containerStyle={{
-              backgroundColor: "white",
-              borderRadius: 10,
-              borderWidth: 0,
-            }}
-            itemContainerStyle={{
-              borderRadius: 10,
-            }}
-            activeColor={"#f0f0f0"}
-            selectedTextStyle={{
-              fontFamily: "Outfit-Regular",
-              fontSize: 16,
-              color: "#181D27",
-            }}
-            style={{
-              borderColor: "#A0A0A0",
-              borderWidth: 1,
-              borderRadius: 10,
-              padding: 12,
-              marginBottom: 8,
-            }}
-          /> */}
           <View className="z-10 w-15 h-4 -mb-1 ml-2">
             <ThemedText className="ml-1 text-gray-700 font-oregular text-xs">
               Logo Mitra
@@ -154,7 +108,7 @@ const FormPartner = () => {
               )}
             </ThemedText>
           </TouchableOpacity>
-          <View className="h-60 w-full bg-transparent"/>
+          <View className="h-60 w-full bg-transparent" />
         </View>
       </View>
       <Confirmation />
