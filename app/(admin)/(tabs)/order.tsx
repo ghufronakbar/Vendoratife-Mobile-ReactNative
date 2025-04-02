@@ -1,14 +1,17 @@
 import { ThemedText } from "@/components/ThemedText";
+import { FloatingAddButton } from "@/components/ui/FloatingAddButton";
 import { Img } from "@/components/ui/Img";
 import api from "@/config/api";
+import { toastError, toastSuccess } from "@/helper/toast";
 import { Order } from "@/models/Order";
 import { Api } from "@/models/Response";
 import formatDate from "@/utils/formatDate";
 import formatRupiah from "@/utils/formatRupiah";
 import { Entypo } from "@expo/vector-icons";
-import { useFocusEffect } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
 import {
+  ActivityIndicator,
   FlatList,
   Pressable,
   RefreshControl,
@@ -27,6 +30,8 @@ const OrderScreen = () => {
     onClickSection,
     sections,
     selectedSection,
+    loadingIds,
+    trackOrder,
   } = useOrders();
   return (
     <RefreshControl refreshing={loading} onRefresh={fetchData}>
@@ -69,8 +74,13 @@ const OrderScreen = () => {
               item={item}
               expanded={selected === item.id}
               onClickExpand={onClickExpand}
+              loadingIds={loadingIds}
+              trackOrder={trackOrder}
             />
           )}
+        />
+        <FloatingAddButton
+          onPress={() => router.push("/(admin)/(page)/form-order")}
         />
       </SafeAreaView>
     </RefreshControl>
@@ -81,11 +91,15 @@ interface ListOrderProps {
   item: Order;
   expanded: boolean;
   onClickExpand: (id: string) => void;
+  loadingIds: string[];
+  trackOrder: (item: Order) => void;
 }
 const ListOrder: React.FC<ListOrderProps> = ({
   item,
   expanded,
   onClickExpand,
+  loadingIds,
+  trackOrder,
 }) => {
   const name = item.orderItems
     .slice(0, 3)
@@ -113,6 +127,14 @@ const ListOrder: React.FC<ListOrderProps> = ({
     textDate = `Selesai: ${formatDate(item.finishedAt, true)}`;
   }
 
+  const onPress = useCallback(() => {
+    if (!item.finishedAt) {
+      trackOrder(item);
+    }
+  }, [item]);
+
+  const isLoading = loadingIds.includes(item.id);
+
   return (
     <Pressable
       className="w-full h-fit bg-white mb-2 border border-gray-200 rounded-2xl shadow-md overflow-hidden py-2 px-2"
@@ -131,33 +153,45 @@ const ListOrder: React.FC<ListOrderProps> = ({
             </ThemedText>
             <ThemedText>{item.partner.name}</ThemedText>
           </View>
-          <Entypo name="chevron-thin-right" size={18} />
+          <Entypo
+            name={expanded ? "chevron-thin-down" : "chevron-thin-right"}
+            size={18}
+          />
         </View>
       </View>
       {expanded && (
-        <View className="flex flex-row justify-between items-end mt-2 w-full">
-          <View className="w-[60%] flex flex-col items-start">
-            {item.orderItems.map((oi, index) => (
-              <View className="flex flex-col" key={index}>
-                <ThemedText className="text-black">
-                  {oi.name} ({oi.quantity} {oi.unit})
-                </ThemedText>
-                <ThemedText>{formatRupiah(oi.totalSellPrice)}</ThemedText>
-              </View>
-            ))}
-            <ThemedText className="text-black font-omedium mt-2">
-              Total Harga : {formatRupiah(item.totalSellPrice)}
-            </ThemedText>
+        <View className="flex flex-col mt-2">
+          <View className="flex flex-col">
+            <ThemedText className="text-black">Alamat:</ThemedText>
+            <ThemedText>{item.partner.address}</ThemedText>
           </View>
-          <View className="w-[40%] flex flex-col items-end space-y-2">
-            <ThemedText className={`text-sm ${statusColor}`}>
-              {textDate}
-            </ThemedText>
-            <TouchableOpacity
-              className={`w-fit h-fit px-6 py-2 rounded-xl ${buttonColor}`}
-            >
-              <ThemedText className="text-white">{buttonText}</ThemedText>
-            </TouchableOpacity>
+          <View className="flex flex-row justify-between items-end mt-2 w-full">
+            <View className="w-[60%] flex flex-col items-start">
+              {item.orderItems.map((oi, index) => (
+                <View className="flex flex-col" key={index}>
+                  <ThemedText className="text-black">
+                    {oi.name} ({oi.quantity} {oi.unit})
+                  </ThemedText>
+                  <ThemedText>{formatRupiah(oi.totalSellPrice)}</ThemedText>
+                </View>
+              ))}
+              <ThemedText className="text-black font-omedium mt-2">
+                Total: {formatRupiah(item.totalSellPrice)}
+              </ThemedText>
+            </View>
+            <View className="w-[40%] flex flex-col items-end space-y-2">
+              <ThemedText className={`text-sm ${statusColor}`}>
+                {textDate}
+              </ThemedText>
+              <TouchableOpacity
+                className={`w-fit h-fit px-6 py-2 rounded-xl ${buttonColor}`}
+                onPress={onPress}
+              >
+                <ThemedText className="text-white">
+                  {isLoading ? <ActivityIndicator color="white" /> : buttonText}
+                </ThemedText>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       )}
@@ -200,6 +234,23 @@ const useOrders = () => {
     }, [])
   );
 
+  const [loadingIds, setLoadingIds] = useState<string[]>([]);
+
+  const trackOrder = async (item: Order) => {
+    try {
+      if (loadingIds.includes(item.id)) return;
+      setLoadingIds([...loadingIds, item.id]);
+      const res = await api.post<Api<Order>>(`/orders/${item.id}/track`);
+      await fetchData();
+      toastSuccess(res.data.message);
+    } catch (error) {
+      console.log(error);
+      toastError(error);
+    } finally {
+      setLoadingIds(loadingIds.filter((id) => id !== item.id));
+    }
+  };
+
   return {
     data,
     loading,
@@ -209,6 +260,8 @@ const useOrders = () => {
     onClickSection,
     selectedSection,
     sections,
+    trackOrder,
+    loadingIds,
   };
 };
 
