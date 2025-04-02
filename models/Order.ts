@@ -18,7 +18,11 @@ export interface Order {
   status: OrderStatus;
 }
 
-export type OrderStatus = "Selesai" | "Dalam Proses" | "Mendatang";
+export type OrderStatus =
+  | "Selesai"
+  | "Dalam Proses"
+  | "Mendatang"
+  | "Dibatalkan";
 
 export interface OrderItem {
   id: string;

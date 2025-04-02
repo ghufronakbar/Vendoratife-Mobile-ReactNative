@@ -1,6 +1,7 @@
 import { ThemedText } from "@/components/ThemedText";
 import { FloatingAddButton } from "@/components/ui/FloatingAddButton";
 import { Img } from "@/components/ui/Img";
+import ModalConfirmation from "@/components/ui/ModalConfirmation";
 import api from "@/config/api";
 import { toastError, toastSuccess } from "@/helper/toast";
 import { Order } from "@/models/Order";
@@ -32,6 +33,9 @@ const OrderScreen = () => {
     selectedSection,
     loadingIds,
     trackOrder,
+    Confirmation,
+    onClickDel,
+    selectedDel,
   } = useOrders();
   return (
     <RefreshControl refreshing={loading} onRefresh={fetchData}>
@@ -43,7 +47,7 @@ const OrderScreen = () => {
           Daftar Pesanan
         </ThemedText>
 
-        <View className="flex flex-row space-x-2">
+        <View className="flex flex-row">
           {sections.map((item, index) => (
             <TouchableOpacity
               className={`px-4 py-2 h-12 rounded-lg flex flex-col`}
@@ -76,12 +80,15 @@ const OrderScreen = () => {
               onClickExpand={onClickExpand}
               loadingIds={loadingIds}
               trackOrder={trackOrder}
+              onClickDel={() => onClickDel(item.id)}
+              selectedDel={selectedDel || ""}
             />
           )}
         />
         <FloatingAddButton
           onPress={() => router.push("/(admin)/(page)/form-order")}
         />
+        <Confirmation />
       </SafeAreaView>
     </RefreshControl>
   );
@@ -93,6 +100,8 @@ interface ListOrderProps {
   onClickExpand: (id: string) => void;
   loadingIds: string[];
   trackOrder: (item: Order) => void;
+  onClickDel: () => void;
+  selectedDel: string;
 }
 const ListOrder: React.FC<ListOrderProps> = ({
   item,
@@ -100,6 +109,8 @@ const ListOrder: React.FC<ListOrderProps> = ({
   onClickExpand,
   loadingIds,
   trackOrder,
+  onClickDel,
+  selectedDel,
 }) => {
   const name = item.orderItems
     .slice(0, 3)
@@ -114,10 +125,13 @@ const ListOrder: React.FC<ListOrderProps> = ({
   } else {
     buttonText = "Mulai";
   }
+  if (item.isDeleted) {
+    buttonText = "Dibatalkan";
+  }
 
   let buttonColor = "bg-custom-1";
   let statusColor = "text-custom-1";
-  if (new Date(item.date) < new Date()) {
+  if (new Date(item.date) < new Date() || item.isDeleted) {
     buttonColor = "bg-red-400";
     statusColor = "text-red-400";
   }
@@ -125,15 +139,20 @@ const ListOrder: React.FC<ListOrderProps> = ({
   let textDate = `Tenggat: ${formatDate(item.date, true)}`;
   if (item.finishedAt) {
     textDate = `Selesai: ${formatDate(item.finishedAt, true)}`;
+  } else if (item.isDeleted) {
+    textDate = `Dibatalkan: ${formatDate(item.updatedAt, true)}`;
   }
 
-  const onPress = useCallback(() => {
-    if (!item.finishedAt) {
+  const onPress = () => {
+    console.log("hit", !item.startedAt, !item.isDeleted);
+    if (!item.startedAt && !item.isDeleted) {
       trackOrder(item);
     }
-  }, [item]);
+  };
 
   const isLoading = loadingIds.includes(item.id);
+
+  const isAbleToCancel = !item.startedAt && !item.isDeleted;
 
   return (
     <Pressable
@@ -187,14 +206,30 @@ const ListOrder: React.FC<ListOrderProps> = ({
               <ThemedText className={`text-sm ${statusColor}`}>
                 {textDate}
               </ThemedText>
-              <TouchableOpacity
-                className={`w-fit h-fit px-6 py-2 rounded-xl ${buttonColor}`}
-                onPress={onPress}
-              >
-                <ThemedText className="text-white">
-                  {isLoading ? <ActivityIndicator color="white" /> : buttonText}
-                </ThemedText>
-              </TouchableOpacity>
+              <View className="flex flex-row space-x-2">
+                {isAbleToCancel && (
+                  <TouchableOpacity
+                    className={`w-fit h-fit px-3 py-2 rounded-xl bg-red-400`}
+                    onPress={onClickDel}
+                  >
+                    <ThemedText className="text-white text-sm">
+                      Batalkan
+                    </ThemedText>
+                  </TouchableOpacity>
+                )}
+                <TouchableOpacity
+                  className={`w-fit h-fit px-3 py-2 rounded-xl ${buttonColor}`}
+                  onPress={onPress}
+                >
+                  <ThemedText className="text-white text-sm">
+                    {isLoading ? (
+                      <ActivityIndicator color="white" />
+                    ) : (
+                      buttonText
+                    )}
+                  </ThemedText>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         </View>
@@ -208,7 +243,7 @@ const useOrders = () => {
   const [d, setData] = useState<Order[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [selectedSection, setSelectedSection] = useState("Mendatang");
-  const sections = ["Mendatang", "Dalam Proses", "Selesai"];
+  const sections = ["Mendatang", "Dalam Proses", "Selesai", "Dibatalkan"];
 
   const data = d.filter((item) => item.status === selectedSection);
 
@@ -242,6 +277,7 @@ const useOrders = () => {
 
   const trackOrder = async (item: Order) => {
     try {
+      console.log(loadingIds.includes(item.id));
       if (loadingIds.includes(item.id)) return;
       setLoadingIds([...loadingIds, item.id]);
       const res = await api.post<Api<Order>>(`/orders/${item.id}/track`);
@@ -255,6 +291,39 @@ const useOrders = () => {
     }
   };
 
+  const [openDel, setOpenDel] = useState(false);
+  const [selectedDel, setSelectedDel] = useState<string | null>(null);
+
+  const onClickDel = (id: string | null) => {
+    setSelectedDel(id);
+    setOpenDel(!openDel);
+  };
+
+  const handleCancel = async () => {
+    try {
+      if (!selectedDel) return;
+      if (loadingIds.includes(selectedDel)) return;
+      onClickDel(null);
+      const res = await api.delete<Api<Order>>(`/orders/${selectedDel}`);
+      await fetchData();
+      toastSuccess(res?.data?.message);
+    } catch (error) {
+      console.log(error);
+      toastError(error);
+    } finally {
+      setSelectedDel(null);
+      setOpenDel(false);
+    }
+  };
+
+  const Confirmation = () => (
+    <ModalConfirmation
+      onConfirm={handleCancel}
+      setShowAlert={setOpenDel}
+      showAlert={openDel}
+    />
+  );
+
   return {
     data,
     loading,
@@ -266,6 +335,9 @@ const useOrders = () => {
     sections,
     trackOrder,
     loadingIds,
+    Confirmation,
+    onClickDel,
+    selectedDel,
   };
 };
 
