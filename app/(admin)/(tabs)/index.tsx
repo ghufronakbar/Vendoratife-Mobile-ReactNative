@@ -1,15 +1,17 @@
 import { ThemedText } from "@/components/ThemedText";
 import { Img } from "@/components/ui/Img";
 import api from "@/config/api";
+import { C } from "@/constants/Colors";
 import { useProfile } from "@/hooks/useProfile";
 import { Api } from "@/models/Response";
 import formatDate from "@/utils/formatDate";
 import formatRupiah from "@/utils/formatRupiah";
-import { Entypo, Ionicons } from "@expo/vector-icons";
+import { Entypo, Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
   FlatList,
+  Pressable,
   RefreshControl,
   ScrollView,
   TouchableOpacity,
@@ -18,20 +20,21 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const HomeScreen = () => {
-  const { profile } = useProfile();
-  const {
-    segments,
-    popularAuctions,
-    onClickSegment,
-    selectedItems,
-    selectedSegment,
-    loading,
-    fetchAuctions,
-  } = useHome();
+  const { profile, signOut } = useProfile();
+  const { goToProfile, isSetting, toggleSetting } = useHome();
+
   return (
-    <SafeAreaView>
-      <ScrollView>
-        <View className="flex flex-row space-x-4 w-full px-4 py-4 items-center">
+    <SafeAreaView className="h-full bg-white">
+      <ScrollView
+        className="h-full"
+        refreshControl={
+          <RefreshControl refreshing={false} onRefresh={() => {}} />
+        }
+      >
+        <Pressable
+          className="flex flex-row space-x-4 w-full px-4 py-4 items-center relative z-20"
+          onPress={toggleSetting}
+        >
           <ThemedText
             type="title"
             className="line-clamp-1 font-omedium max-w-[70%]"
@@ -39,234 +42,138 @@ const HomeScreen = () => {
             Hi, {profile.name}
           </ThemedText>
           <Entypo name="chevron-thin-down" size={18} />
-        </View>        
-        <RefreshControl
-          refreshing={loading}
-          onRefresh={fetchAuctions}
-          className="space-y-4"
-        >
-          <View className="space-y-2">
-            <ThemedText className="px-4 text-neutral-700" type="subtitle">
-              Popular Auctions
+          {isSetting && (
+            <View className="w-40 h-fit bg-white absolute -bottom-14 z-20 flex flex-col border border-[#F5F5F5] rounded-lg">
+              <TouchableOpacity
+                className="flex flex-row items-center px-2 py-1 space-x-2 border-b border-[#F5F5F5]"
+                onPress={goToProfile}
+              >
+                <Ionicons name="person" />
+                <ThemedText className="text-black text-lg">
+                  Edit Profile
+                </ThemedText>
+              </TouchableOpacity>
+              <TouchableOpacity
+                className="flex flex-row items-center px-2 py-1 space-x-2 "
+                onPress={signOut}
+              >
+                <Ionicons name="power" color={"#f87171"} />
+                <ThemedText className="text-black text-lg">Logout</ThemedText>
+              </TouchableOpacity>
+            </View>
+          )}
+        </Pressable>
+        <View className="flex flex-col space-y-4 h-full">
+          <View className="flex flex-col space-y-2">
+            <ThemedText className="text-black text-2xl font-omedium px-4">
+              Overview
             </ThemedText>
-            <FlatList
-              data={popularAuctions}
-              keyExtractor={(item) => item.id.toString()}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{
-                padding: 4,
-                marginHorizontal: 16,
-              }}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  className="relative rounded-lg shadow-lg drop-shadow-lg overflow-hidden h-40 w-[80vw] bg-red-300 mr-4 flex flex-col justify-end"
-                  onPress={() =>
-                    router.push({
-                      pathname: "/auction",
-                      params: { id: item.id },
-                    })
-                  }
-                >
-                  <Img
-                    uri={item.images[0]}
-                    className="w-full h-full object-cover absolute top-0 left-0"
+            <View className="flex flex-row w-full justify-between px-4">
+              <View
+                className="w-[43vw] h-[43vw] bg-[#F5F5F5] rounded-xl flex flex-col p-4 justify-between"
+                style={{ elevation: 5 }}
+              >
+                <View className="flex flex-row w-full bg-white items-center px-2 py-1 rounded-3xl space-x-2">
+                  <MaterialIcons
+                    name="bakery-dining"
+                    color={"#ca8a04"}
+                    size={24}
                   />
-                  <View className="absolute bottom-0 left-0 right-0 flex flex-row justify-between items-center px-2 py-2 bg-black opacity-30 w-full h-full" />
-                  <View className="flex flex-col z-10 bg-white px-4 py-2">
-                    <ThemedText
-                      type="subtitle"
-                      className="text-black line-clamp-1"
-                      numberOfLines={1}
-                    >
-                      {item.name}
-                    </ThemedText>
-                    <View className="flex flex-row items-center justify-between">
-                      <ThemedText
-                        type="label"
-                        className="text-neutral-700 font-oregular"
-                      >
-                        {item.category}
-                      </ThemedText>
-                      <View className="flex flex-col justify-end items-end">
-                        <ThemedText
-                          type="label"
-                          className="text-neutral-700 font-oregular text-xs"
-                        >
-                          Last Bid
-                        </ThemedText>
-                        <ThemedText
-                          type="label"
-                          className="text-neutral-700 font-oregular text-xs"
-                        >
-                          {formatRupiah(
-                            item?.bids?.[0]?.amount || item.openingPrice
-                          )}
-                        </ThemedText>
-                      </View>
-                    </View>
-                  </View>
-                </TouchableOpacity>
-              )}
-            />
-          </View>
-
-          <View className="space-y-2">
-            <ThemedText className="px-4 text-neutral-700" type="subtitle">
-              Bid Now
-            </ThemedText>
-            <FlatList
-              data={segments}
-              keyExtractor={(item, index) => index.toString()}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{
-                padding: 4,
-                marginHorizontal: 16,
-              }}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  className={`px-2 py-1 rounded-lg mr-2 ${
-                    item.name === selectedSegment
-                      ? "bg-custom-1"
-                      : "bg-custom-2"
-                  }`}
-                  onPress={() => onClickSegment(item.name)}
-                >
-                  <ThemedText className="text-white" type="defaultSemiBold">
-                    {item.name}
+                  <ThemedText className="font-omedium text-xl">
+                    Hari Ini
                   </ThemedText>
-                </TouchableOpacity>
-              )}
-            />
-            <View className="flex flex-row items-center justify-between px-4 flex-wrap w-full space-y-2">
-              {selectedItems.map((item, index) => (
-                <TouchableOpacity
-                  className="w-[49%] h-52 rounded-lg overflow-hidden px-2 py-2 flex flex-col drop-shadow-lg border border-neutral-200 bg-white"
-                  key={item.id + index}
-                  onPress={() =>
-                    router.push({
-                      pathname: "/auction",
-                      params: { id: item.id },
-                    })
-                  }
-                >
-                  <Img
-                    uri={item.images[0]}
-                    className="w-full h-28 object-cover rounded-lg"
-                  />
-                  <View className="flex flex-col mt-2 justify-between h-16">
-                    <ThemedText
-                      type="subtitle"
-                      className="text-black line-clamp-1"
-                      numberOfLines={1}
-                    >
-                      {item.name}
-                    </ThemedText>
-                    <View>
-                      <ThemedText
-                        type="label"
-                        className="text-neutral-700 font-omedium text-xs"
-                      >
-                        {formatRupiah(
-                          item?.bids?.[0]?.amount || item.openingPrice
-                        )}
-                      </ThemedText>
-                      <ThemedText
-                        type="label"
-                        className="text-neutral-700 font-oregular text-xs"
-                      >
-                        End in {formatDate(item.end, true, true)}
-                      </ThemedText>
-                    </View>
+                </View>
+                <View className="flex flex-col">
+                  <ThemedText className="text-xl font-osemibold">
+                    2 Pesanan
+                  </ThemedText>
+                  <ThemedText className="-mb-1">Harus segera</ThemedText>
+                  <ThemedText>dikirim hari ini!</ThemedText>
+                </View>
+              </View>
+              <View
+                className="w-[43vw] h-[43vw] bg-white rounded-xl flex flex-col p-4 justify-between"
+                style={{ elevation: 5 }}
+              >
+                <View className="flex flex-row w-full bg-white items-center px-2 py-1 rounded-3xl space-x-2">
+                  <View className="rounded-full bg-[#F5F5F5] flex items-center justify-center w-8 h-8">
+                    <MaterialIcons name="bar-chart" color={C[1]} size={24} />
                   </View>
-                </TouchableOpacity>
-              ))}
+                  <ThemedText className="font-omedium text-xl">
+                    Sales
+                  </ThemedText>
+                </View>
+                <View className="flex flex-col">
+                  <ThemedText className="font-osemibold">Rp</ThemedText>
+                  <ThemedText className="font-osemibold text-2xl">
+                    100.000.000
+                  </ThemedText>
+                </View>
+              </View>
             </View>
           </View>
-        </RefreshControl>
+          <View className="flex flex-col space-y-2">
+            <ThemedText className="text-black text-2xl font-omedium px-4">
+              Analisis
+            </ThemedText>
+            <View className="flex flex-row w-full justify-between px-4">
+              <View
+                className="w-[43vw] h-[43vw] bg-[#F5F5F5] rounded-xl flex flex-col p-4 justify-between"
+                style={{ elevation: 5 }}
+              >
+                <View className="flex flex-row w-full bg-white items-center px-2 py-1 rounded-3xl space-x-2">
+                  <MaterialIcons
+                    name="bakery-dining"
+                    color={"#ca8a04"}
+                    size={24}
+                  />
+                  <ThemedText className="font-omedium text-xl">
+                    Hari Ini
+                  </ThemedText>
+                </View>
+                <View className="flex flex-col">
+                  <ThemedText className="text-xl font-osemibold">
+                    2 Pesanan
+                  </ThemedText>
+                  <ThemedText className="-mb-1">Harus segera</ThemedText>
+                  <ThemedText>dikirim hari ini!</ThemedText>
+                </View>
+              </View>
+              <View
+                className="w-[43vw] h-[43vw] bg-white rounded-xl flex flex-col p-4 justify-between"
+                style={{ elevation: 5 }}
+              >
+                <View className="flex flex-row w-full bg-white items-center px-2 py-1 rounded-3xl space-x-2">
+                  <View className="rounded-full bg-[#F5F5F5] flex items-center justify-center w-8 h-8">
+                    <MaterialIcons name="bar-chart" color={C[1]} size={24} />
+                  </View>
+                  <ThemedText className="font-omedium text-xl">
+                    Sales
+                  </ThemedText>
+                </View>
+                <View className="flex flex-col">
+                  <ThemedText className="font-osemibold">Rp</ThemedText>
+                  <ThemedText className="font-osemibold text-2xl">
+                    100.000.000
+                  </ThemedText>
+                </View>
+              </View>
+            </View>
+          </View>
+          <View className="h-40 w-full" />
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
 };
 
-interface SegmentedAuction {
-  name: string;
-  items: Auction[];
-}
-
 const useHome = () => {
-  const [loading, setLoading] = useState(true);
-  const [auctions, setAuctions] = useState<Auction[]>([]);
-  const [segments, setSegments] = useState<SegmentedAuction[]>([
-    { name: "All", items: [] },
-  ]);
-  const [selectedSegment, setSelectedSegment] = useState<string>("All");
+  const [isSetting, setIsSetting] = useState(false);
 
-  const onClickSegment = (name: string) => {
-    setSelectedSegment(name);
-  };
+  const toggleSetting = () => setIsSetting(!isSetting);
+  const goToProfile = () => router.push("/(admin)/(page)/profile");
 
-  const selectedItems =
-    segments.find((segment) => segment.name === selectedSegment)?.items || [];
-
-  const fetchAuctions = async () => {
-    try {
-      setLoading(true);
-      const res = await api.get<Api<Auction[]>>("/auctions");
-      setAuctions(res.data.data);
-      const segments: SegmentedAuction[] = [];
-      res.data.data.forEach((item) => {
-        const index = segments.findIndex(
-          (segment) => segment.name === item.category
-        );
-        if (index === -1) {
-          segments.push({ name: item.category, items: [item] });
-        } else {
-          segments[index].items.push(item);
-        }
-      });
-      for (const segment of segments) {
-        segment.items.sort(
-          (a, b) => new Date(b.start).getTime() - new Date(a.start).getTime()
-        );
-      }
-      setSegments([
-        {
-          name: "All",
-          items: res.data.data.sort(
-            (a, b) => new Date(b.start).getTime() - new Date(a.start).getTime()
-          ),
-        },
-        ...segments,
-      ]);
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const popularAuctions = auctions
-    .sort((a, b) => b.bids.length - a.bids.length)
-    .slice(0, 3);
-
-  useFocusEffect(
-    useCallback(() => {
-      fetchAuctions();
-    }, [])
-  );
-
-  return {
-    auctions,
-    segments,
-    popularAuctions,
-    onClickSegment,
-    selectedItems,
-    selectedSegment,
-    loading,
-    fetchAuctions,
-  };
+  return { isSetting, toggleSetting, goToProfile };
 };
 
 export default HomeScreen;
