@@ -1,9 +1,16 @@
-const formatRupiah = (number?: number | null) => {
+const formatRupiah = (number?: number | null, withRp = true) => {
   if (!number) return "-";
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-  }).format(number);
+  if (!withRp) {
+    return number.toLocaleString("id-ID", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  } else {
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+    }).format(number);
+  }
 };
 
 export default formatRupiah;

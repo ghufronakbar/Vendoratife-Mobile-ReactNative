@@ -64,6 +64,10 @@ const AdminPageLayout = () => {
           name="change-password"
           options={{ title: "Ubah Password", headerShown: true }}
         />
+        <Stack.Screen
+          name="analytic"
+          options={{ title: "Analisis", headerShown: true }}
+        />
       </Stack>
       <Toast />
     </>
