@@ -105,7 +105,7 @@ const HomeScreen = () => {
                 </View>
                 <View className="flex flex-col">
                   <ThemedText className="text-xl font-osemibold">
-                    {overview?.order?.total
+                    {typeof overview?.order?.total === "number"
                       ? overview?.order?.total + " Pesanan"
                       : "Loading..."}
                   </ThemedText>

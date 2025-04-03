@@ -119,7 +119,7 @@ const ListOrder: React.FC<ListOrderProps> = ({
 
   let buttonText = "";
   if (item.finishedAt) {
-    buttonText = "Edit Pesanan";
+    buttonText = "Pesanan Selesai";
   } else if (item.startedAt) {
     buttonText = "Selesai";
   } else {
@@ -265,6 +265,8 @@ const useOrders = () => {
     const res = await api.get<Api<Order[]>>("/orders");
     setData(res.data.data);
     setLoading(false);
+    setSelected(null);
+    setLoadingIds([]);
   };
 
   useFocusEffect(
@@ -277,7 +279,6 @@ const useOrders = () => {
 
   const trackOrder = async (item: Order) => {
     try {
-      console.log(loadingIds.includes(item.id));
       if (loadingIds.includes(item.id)) return;
       setLoadingIds([...loadingIds, item.id]);
       const res = await api.post<Api<Order>>(`/orders/${item.id}/track`);
@@ -287,7 +288,7 @@ const useOrders = () => {
       console.log(error);
       toastError(error);
     } finally {
-      setLoadingIds(loadingIds.filter((id) => id !== item.id));
+      setLoadingIds([]);
     }
   };
 
@@ -302,7 +303,6 @@ const useOrders = () => {
   const handleCancel = async () => {
     try {
       if (!selectedDel) return;
-      if (loadingIds.includes(selectedDel)) return;
       onClickDel(null);
       const res = await api.delete<Api<Order>>(`/orders/${selectedDel}`);
       await fetchData();

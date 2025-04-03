@@ -147,7 +147,7 @@ const ListOrder: React.FC<ListOrderProps> = ({
 
   let buttonText = "";
   if (item.finishedAt) {
-    buttonText = "Edit Pesanan";
+    buttonText = "Pesanan Selesai";
   } else if (item.startedAt) {
     buttonText = "Selesai";
   } else {
