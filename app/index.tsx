@@ -1,17 +1,17 @@
+import { ThemedText } from "@/components/ThemedText";
 import { ACCESS_TOKEN, ROLE } from "@/constants/AsyncStorage";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import { useEffect, useRef } from "react";
-import { View, Animated, Image } from "react-native";
+import { View, Animated } from "react-native";
 
 const IndexScreen = () => {
   useAuth();
   return (
     <View className="w-full h-full bg-custom-1 flex items-center justify-center">
-      <Image
-        source={require("@/assets/images/logo.png")}
-        className="w-40 h-40"
-      />
+      <ThemedText className="text-white text-3xl font-obold">
+        Vendoratife
+      </ThemedText>
     </View>
   );
 };

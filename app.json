@@ -8,7 +8,7 @@
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "splash": {
-      "backgroundColor": "#ffa31a"
+      "backgroundColor": "#23ACE3"
     },
     "ios": {
       "supportsTablet": true,
@@ -46,7 +46,10 @@
     "extra": {
       "router": {
         "origin": false
-      }      
+      },
+      "eas": {
+        "projectId": "3c31670e-05f4-47da-a8df-d39f99630815"
+      }
     }
   },
   "userInterfaceStyle": "automatic"

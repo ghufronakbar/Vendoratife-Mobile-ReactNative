@@ -1,7 +1,7 @@
 import * as ImagePicker from "expo-image-picker";
 import { Alert } from "react-native";
 import * as ImageManipulator from "expo-image-manipulator";
-import { requestPermissions } from "./getCurrentLocation";
+import { requestPermissions } from "./permission";
 
 export const compressImage = async (uri: string) => {
   const manipResult = await ImageManipulator.manipulateAsync(
