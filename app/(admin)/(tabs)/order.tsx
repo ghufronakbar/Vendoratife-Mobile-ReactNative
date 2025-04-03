@@ -144,8 +144,7 @@ const ListOrder: React.FC<ListOrderProps> = ({
   }
 
   const onPress = () => {
-    console.log("hit", !item.startedAt, !item.isDeleted);
-    if (!item.startedAt && !item.isDeleted) {
+    if (!item.finishedAt && !item.isDeleted) {
       trackOrder(item);
     }
   };
