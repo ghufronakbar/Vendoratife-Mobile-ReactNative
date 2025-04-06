@@ -2,18 +2,13 @@ import { ThemedText } from "@/components/ThemedText";
 import LoadingView from "@/components/ui/LoadingView";
 import api from "@/config/api";
 import { C } from "@/constants/Colors";
-import {
-  ChartIncome,
-  Overview,
-  PartnerOverview,
-  TopProduct,
-} from "@/models/Dashboard";
+import { ChartRes, Overview, PartnerOverview } from "@/models/Dashboard";
 import { Api } from "@/models/Response";
 import formatDate from "@/utils/formatDate";
 import formatRupiah from "@/utils/formatRupiah";
 import { Entypo, MaterialIcons } from "@expo/vector-icons";
 import { useFocusEffect, useNavigation } from "expo-router";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   Dimensions,
   RefreshControl,
@@ -28,11 +23,8 @@ import StackedBarChart, {
 
 const AnalyticScreen = () => {
   const {
-    overview,
     chartProductData,
     sbChartConfig,
-    productSold,
-    colors,
     loading,
     fetchData,
     onClickSection,
@@ -40,13 +32,18 @@ const AnalyticScreen = () => {
     selectedSection,
     partners,
     isVisible,
+    income,
+    product,
+    selectedType,
+    onClickType,
+    fetching
   } = useDashboard();
   if (loading) return <LoadingView />;
   return (
     <ScrollView
       className="h-full bg-white"
       refreshControl={
-        <RefreshControl refreshing={loading} onRefresh={fetchData} />
+        <RefreshControl refreshing={fetching} onRefresh={fetchData} />
       }
     >
       <View className="flex flex-col space-y-4 h-full">
@@ -71,8 +68,30 @@ const AnalyticScreen = () => {
             </TouchableOpacity>
           ))}
         </View>
+        <View className="flex flex-row px-4 space-x-2">
+          {TYPES.map((item, index) => (
+            <TouchableOpacity
+              className={`px-2 py-1 h-fit rounded-xl flex items-center justify-center ${
+                selectedType === item
+                  ? "bg-custom-1"
+                  : " bg-white border border-custom-1"
+              }`}
+              onPress={() => onClickType(item)}
+            >
+              <ThemedText
+                className={`text-sm ${
+                  selectedType === item ? "text-white" : " text-custom-1"
+                }`}
+              >
+                {item}
+              </ThemedText>
+            </TouchableOpacity>
+          ))}
+        </View>
         <View
-          className={`flex flex-col space-y-2 px-4 ${isVisible("Ringkasan")}`}
+          className={`flex flex-col space-y-2 px-4 mt-2 ${isVisible(
+            "Ringkasan"
+          )}`}
         >
           <View
             className="w-full h-fit bg-white rounded-xl flex flex-col p-4"
@@ -85,7 +104,7 @@ const AnalyticScreen = () => {
                   Terakhir Diperbarui {formatDate(new Date(), true, true)}
                 </ThemedText>
                 <ThemedText className="text-2xl font-osemibold mt-1 text-black">
-                  {formatRupiah(overview?.sales?.totalIncome)}
+                  {formatRupiah(income?.master?.totalSellPrice)}
                 </ThemedText>
               </View>
               <View className="rounded-full bg-[#F5F5F5] flex items-center justify-center w-10 h-10">
@@ -98,9 +117,10 @@ const AnalyticScreen = () => {
                 <StackedBarChart
                   data={chartProductData}
                   width={
-                    Dimensions.get("window").width * 0.1 +
-                    Dimensions.get("window").width *
-                      (0.2 * chartProductData.data.length)
+                    Dimensions.get("window").width * 2
+                    //  +
+                    // Dimensions.get("window").width *
+                    //   (0.1 * chartProductData.data.length)
                   }
                   height={180}
                   chartConfig={sbChartConfig}
@@ -117,7 +137,7 @@ const AnalyticScreen = () => {
               )}
             </ScrollView>
             <View className="w-full flex flex-row flex-wrap justify-between mt-4 px-4">
-              {productSold?.map((item, index) => (
+              {income?.keys?.map((item, index) => (
                 <View
                   className="flex flex-col w-[48%] items-start mb-2"
                   key={index}
@@ -125,12 +145,12 @@ const AnalyticScreen = () => {
                   <View
                     className="w-2 h-2"
                     style={{
-                      backgroundColor: colors[index] || C[1],
+                      backgroundColor: item?.color || C[1],
                     }}
                   ></View>
-                  <ThemedText>{item.name}</ThemedText>
+                  <ThemedText>{item?.name}</ThemedText>
                   <ThemedText className="-mt-1 text-sm">
-                    {formatRupiah(item.totalSellPrice)}
+                    {formatRupiah(item?.total)}
                   </ThemedText>
                 </View>
               ))}
@@ -142,7 +162,7 @@ const AnalyticScreen = () => {
           >
             <ThemedText>Penjualan Bersih (IDR)</ThemedText>
             <ThemedText className="text-2xl font-osemibold mt-1 text-black">
-              {formatRupiah(overview?.sales?.totalProfit)}
+              {formatRupiah(income?.master?.profit)}
             </ThemedText>
             <ThemedText className="text-sm">
               Total penjualan setelah dipotong biaya modal produksi
@@ -158,7 +178,7 @@ const AnalyticScreen = () => {
           >
             <ThemedText>Total Pesanan Terjual</ThemedText>
             <ThemedText className="text-2xl font-osemibold mt-1 text-black">
-              {overview?.orderItem?.total || 0}
+              {product?.master?.total || 0}
             </ThemedText>
           </View>
           <View
@@ -166,20 +186,22 @@ const AnalyticScreen = () => {
             style={{ elevation: 5 }}
           >
             <ThemedText className="mb-4">Barang Terlaris</ThemedText>
-            {productSold?.map((item, index) => (
-              <View
-                key={index}
-                className="mb-2 flex flex-row justify-between items-center"
-              >
-                <View className="flex flex-col">
-                  <ThemedText>{item.name}</ThemedText>
-                  <ThemedText className="text-2xl text-black">
-                    {item.quantity}
-                  </ThemedText>
+            {product?.keys
+              ?.sort((a, b) => b.total - a.total)
+              .slice(0, 5)
+              .map((item, index) => (
+                <View
+                  key={index}
+                  className="mb-2 flex flex-row justify-between items-center"
+                >
+                  <View className="flex flex-col">
+                    <ThemedText>{item.name}</ThemedText>
+                    <ThemedText className="text-2xl text-black">
+                      {item.total}
+                    </ThemedText>
+                  </View>
                 </View>
-                <Entypo name="chevron-thin-right" size={18} color={"gray"} />
-              </View>
-            ))}
+              ))}
           </View>
         </View>
         <View className={`flex flex-col space-y-2 px-4 ${isVisible("Mitra")}`}>
@@ -189,7 +211,7 @@ const AnalyticScreen = () => {
           >
             <ThemedText>Rata-Rata Transaksi Mitra</ThemedText>
             <ThemedText className="text-2xl font-osemibold mt-1 text-black">
-              {formatRupiah(overview?.sales?.averageTransactionValue)}
+              {formatRupiah(partners?.transaction?.averageTransactionValue)}
             </ThemedText>
             <ThemedText className="text-sm leading-4">
               Rata-rata nilai pembelian dari setiap mitra (penjualan bersih
@@ -203,10 +225,6 @@ const AnalyticScreen = () => {
             <ThemedText>Total Mitra Bergabung</ThemedText>
             <ThemedText className="text-2xl font-osemibold mt-1 text-black">
               {partners?.totalPartners || 0}
-            </ThemedText>
-            <ThemedText className="text-sm leading-4">
-              Rata-rata nilai pembelian dari setiap mitra (penjualan bersih
-              dibagi dengan total pesanan)
             </ThemedText>
           </View>
           <View
@@ -225,7 +243,6 @@ const AnalyticScreen = () => {
                     {item?.totalQuantity}
                   </ThemedText>
                 </View>
-                <Entypo name="chevron-thin-right" size={18} color={"gray"} />
               </View>
             ))}
           </View>
@@ -236,16 +253,37 @@ const AnalyticScreen = () => {
   );
 };
 
+type TypeOverview = "12 Bulan Terakhir" | "Bulan Ini" | "7 Hari Terakhir";
+const TYPES: TypeOverview[] = [
+  "12 Bulan Terakhir",
+  "Bulan Ini",
+  "7 Hari Terakhir",
+];
+
 const useDashboard = () => {
-  const [overview, setOverview] = useState<Overview>({} as Overview);
-  const [chartProduct, setChartProduct] = useState<ChartIncome>();
-  const [productSold, setProductSold] = useState<TopProduct[]>();
+  const [income, setIncome] = useState<ChartRes>();
+  const [product, setProduct] = useState<ChartRes>();
   const [partners, setPartners] = useState<PartnerOverview>();
+  const [selectedType, setSelectedType] =
+    useState<TypeOverview>("12 Bulan Terakhir");
+
+  const [fetching, setFetching] = useState(false);
 
   const [selectedSection, setSelectedSection] = useState("Ringkasan");
   const sections = ["Ringkasan", "Penjualan", "Mitra"];
 
-  const loading = !overview || !chartProduct || !productSold || !partners;
+  const type =
+    selectedType === "7 Hari Terakhir"
+      ? "weekly"
+      : selectedType === "Bulan Ini"
+      ? "monthly"
+      : "yearly";
+
+  const onClickType = (type: TypeOverview) => {
+    setSelectedType(type);
+  };
+
+  const loading = !income || !product || !partners;
 
   useNavigation().setOptions({
     headerShown: !loading,
@@ -255,60 +293,59 @@ const useDashboard = () => {
     setSelectedSection(section);
   };
 
-  useFocusEffect(
-    useCallback(() => {
-      fetchData();
-    }, [])
-  );
+  // useFocusEffect(
+  //   useCallback(() => {
+  //     fetchData();
+  //   }, [])
+  // );
 
-  const fetchOverview = async () => {
-    const res = await api.get<Api<Overview>>("/dashboard/overview");
-    setOverview(res.data.data);
+  useEffect(() => {
+    fetchData();
+  }, [type]);
+
+  const fetchChartIncome = async () => {
+    const res = await api.get<Api<ChartRes>>("/dashboard/chart-income", {
+      params: { type },
+    });
+    setIncome(res.data.data);
   };
 
   const fetchChartProduct = async () => {
-    const res = await api.get<Api<ChartIncome>>("/dashboard/chart-income");
-    setChartProduct(res.data.data);
+    const res = await api.get<Api<ChartRes>>("/dashboard/chart-product", {
+      params: { type },
+    });
+    setProduct(res.data.data);
   };
 
   const fetchPartnerOverview = async () => {
     const res = await api.get<Api<PartnerOverview>>(
-      "/dashboard/partner-overview"
+      "/dashboard/partner-overview",
+      {
+        params: { type },
+      }
     );
     setPartners(res.data.data);
   };
 
-  const fetchProductSold = async () => {
-    const res = await api.get<Api<TopProduct[]>>("/dashboard/product-sold");
-    setProductSold(res.data.data);
-  };
-
-  const dataProduct = chartProduct?.chart.map((item) =>
+  const dataProduct = income?.chart.map((item) =>
     Object.values(item).filter((value) => typeof value === "number")
   ) || [[]];
 
-  const colors: string[] = [];
-  const productLength = chartProduct?.keys?.length || 0;
-  for (let i = 0; i < productLength; i++) {
-    const key = Object.keys(C)[i % Object.keys(C).length] as keyof typeof C;
-    colors.push(C[key]);
-  }
-
   const chartProductData: StackedBarChartData = {
-    labels:
-      chartProduct?.chart.map((item) => item?.month?.substring(0, 3)) || [],
-    legend: chartProduct?.keys || [],
+    labels: income?.chart.map((item) => item?.date) || [],
+    legend: income?.keys.map((item) => item?.name) || [],
     data: dataProduct,
-    barColors: colors,
+    barColors: income?.keys.map((item) => item?.color) || [],
   };
 
   const fetchData = async () => {
+    setFetching(true);
     await Promise.all([
-      fetchOverview(),
       fetchChartProduct(),
-      fetchProductSold(),
+      fetchChartIncome(),
       fetchPartnerOverview(),
     ]);
+    setFetching(false);
   };
 
   useFocusEffect(
@@ -335,18 +372,20 @@ const useDashboard = () => {
   };
 
   return {
-    overview,
     chartProductData,
     loading,
     sbChartConfig,
-    colors,
-    productSold,
+    fetching,
     fetchData,
     onClickSection,
     sections,
     selectedSection,
     partners,
     isVisible,
+    income,
+    product,
+    selectedType,
+    onClickType,
   };
 };
 export default AnalyticScreen;

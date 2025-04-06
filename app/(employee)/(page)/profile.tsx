@@ -17,6 +17,7 @@ import { User } from "@/models/User";
 import { CountryPicker } from "react-native-country-codes-picker";
 import { TextInput } from "react-native-paper";
 import SelectRoundImage from "@/components/ui/SelectRoundImage";
+import { useProfile } from "@/hooks/useProfile";
 
 const ProfileScreen = () => {
   const {
@@ -27,7 +28,7 @@ const ProfileScreen = () => {
     pending,
     CountryCode,
     onClickCountry,
-  } = useProfile();
+  } = useEditProfile();
 
   if (loading) return <LoadingView />;
 
@@ -122,11 +123,12 @@ const initUserDTO: UserDTO = {
   image: null,
 };
 
-const useProfile = () => {
+const useEditProfile = () => {
   const [loading, setLoading] = useState(false);
   const [pending, setPending] = useState(false);
   const [openCountry, setOpenCountry] = useState(false);
   const [form, setForm] = useState(initUserDTO);
+  const { updateProfile } = useProfile();
 
   useNavigation().setOptions({
     headerShown: !loading,
@@ -179,6 +181,7 @@ const useProfile = () => {
       if (pending || loading) return;
       setPending(true);
       const res = await api.put<Api<User>>("/account", form);
+      updateProfile(res.data.data);
       toastSuccess(res?.data?.message);
       await new Promise((resolve) => setTimeout(resolve, 1000));
       router.back();

@@ -119,7 +119,7 @@ const ListOrder: React.FC<ListOrderProps> = ({
 
   let buttonText = "";
   if (item.finishedAt) {
-    buttonText = "Pesanan Selesai";
+    buttonText = "Selesai";
   } else if (item.startedAt) {
     buttonText = "Selesai";
   } else {
@@ -207,16 +207,16 @@ const ListOrder: React.FC<ListOrderProps> = ({
               </ThemedText>
               <View className="flex flex-row space-x-2">
                 {isAbleToCancel && (
-                  <TouchableOpacity
+                  <Pressable
                     className={`w-fit h-fit px-3 py-2 rounded-xl bg-red-400`}
                     onPress={onClickDel}
                   >
                     <ThemedText className="text-white text-sm">
                       Batalkan
                     </ThemedText>
-                  </TouchableOpacity>
+                  </Pressable>
                 )}
-                <TouchableOpacity
+                <Pressable
                   className={`w-fit h-fit px-3 py-2 rounded-xl ${buttonColor}`}
                   onPress={onPress}
                 >
@@ -227,7 +227,7 @@ const ListOrder: React.FC<ListOrderProps> = ({
                       buttonText
                     )}
                   </ThemedText>
-                </TouchableOpacity>
+                </Pressable>
               </View>
             </View>
           </View>

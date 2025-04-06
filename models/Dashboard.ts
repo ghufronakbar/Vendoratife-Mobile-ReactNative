@@ -13,27 +13,19 @@ export interface Overview {
   };
 }
 
-export interface ChartProduct {
-  keys: string[];
+export interface ChartRes {
+  keys: { name: string; color: string; total: number }[];
   chart: {
-    month: string;
-    [key: string]: number | string;
-  }[];
-}
-
-export interface ChartIncome {
-  keys: string[];
-  chart: {
-    month: string;
+    date: string;
     [key: string]: number | string;
     total: number;
   }[];
-}
-
-export interface TopProduct {
-  name: string;
-  quantity: number;
-  totalSellPrice: number;
+  master: {
+    total: number;
+    totalBuyPrice: number;
+    totalSellPrice: number;
+    profit: number;
+  };
 }
 
 export interface PartnerOverview {
@@ -42,4 +34,10 @@ export interface PartnerOverview {
     name: string;
     totalQuantity: number;
   }[];
+  transaction: {
+    averageTransactionValue: number;
+    totalBuyPrice: number;
+    totalSellPrice: number;
+    totalQuantity: number;
+  };
 }

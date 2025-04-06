@@ -52,13 +52,13 @@ const HomeOrderScreen = () => {
           </ThemedText>
           <Entypo name="chevron-thin-down" size={18} />
           {isSetting && (
-            <View className="w-40 h-fit bg-white absolute -bottom-24 z-20 flex flex-col border border-[#F5F5F5] rounded-lg">
+            <View className="w-fit h-fit bg-white absolute -bottom-24 z-20 flex flex-col border border-[#F5F5F5] rounded-lg">
               <TouchableOpacity
                 className="flex flex-row items-center px-2 py-1 space-x-2 border-b border-[#F5F5F5]"
                 onPress={goToProfile}
               >
-                <Ionicons name="person" />
-                <ThemedText className="text-black text-lg">
+                <Ionicons name="person" size={20} />
+                <ThemedText className="text-black text-xl">
                   Edit Profile
                 </ThemedText>
               </TouchableOpacity>
@@ -66,8 +66,8 @@ const HomeOrderScreen = () => {
                 className="flex flex-row items-center px-2 py-1 space-x-2 border-b border-[#F5F5F5]"
                 onPress={goToChange}
               >
-                <Ionicons name="lock-closed" color={"#ffa500"} />
-                <ThemedText className="text-black text-lg">
+                <Ionicons name="lock-closed" color={"#ffa500"} size={20} />
+                <ThemedText className="text-black text-xl">
                   Ubah Password
                 </ThemedText>
               </TouchableOpacity>
@@ -75,8 +75,8 @@ const HomeOrderScreen = () => {
                 className="flex flex-row items-center px-2 py-1 space-x-2 "
                 onPress={signOut}
               >
-                <Ionicons name="power" color={"#f87171"} />
-                <ThemedText className="text-black text-lg">Logout</ThemedText>
+                <Ionicons name="power" color={"#f87171"} size={20} />
+                <ThemedText className="text-black text-xl">Logout</ThemedText>
               </TouchableOpacity>
             </View>
           )}
