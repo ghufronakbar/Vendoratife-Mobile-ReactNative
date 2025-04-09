@@ -31,18 +31,20 @@ const OrderScreen = () => {
     onClickSection,
     sections,
     selectedSection,
-    loadingIds,
+    trackIds,
     trackOrder,
     Confirmation,
     onClickDel,
+
     selectedDel,
+    cancelIds,
   } = useOrders();
   return (
     <RefreshControl refreshing={loading} onRefresh={fetchData}>
       <SafeAreaView className="bg-white h-full">
         <ThemedText
           type="title"
-          className="line-clamp-1 py-6 px-4 text-center font-omedium"
+          className=" py-6 px-4 text-center font-omedium"
         >
           Daftar Pesanan
         </ThemedText>
@@ -78,10 +80,10 @@ const OrderScreen = () => {
               item={item}
               expanded={selected === item.id}
               onClickExpand={onClickExpand}
-              loadingIds={loadingIds}
+              trackIds={trackIds}
+              cancelIds={cancelIds}
               trackOrder={trackOrder}
               onClickDel={() => onClickDel(item.id)}
-              selectedDel={selectedDel || ""}
             />
           )}
         />
@@ -98,19 +100,19 @@ interface ListOrderProps {
   item: Order;
   expanded: boolean;
   onClickExpand: (id: string) => void;
-  loadingIds: string[];
+  trackIds: string[];
+  cancelIds: string[];
   trackOrder: (item: Order) => void;
   onClickDel: () => void;
-  selectedDel: string;
 }
 const ListOrder: React.FC<ListOrderProps> = ({
   item,
   expanded,
   onClickExpand,
-  loadingIds,
+  trackIds,
+  cancelIds,
   trackOrder,
   onClickDel,
-  selectedDel,
 }) => {
   const name = item.orderItems
     .slice(0, 3)
@@ -125,13 +127,13 @@ const ListOrder: React.FC<ListOrderProps> = ({
   } else {
     buttonText = "Mulai";
   }
-  if (item.isDeleted) {
+  if (item.cancelledAt) {
     buttonText = "Dibatalkan";
   }
 
   let buttonColor = "bg-custom-1";
   let statusColor = "text-custom-1";
-  if (new Date(item.date) < new Date() || item.isDeleted) {
+  if (item.cancelledAt) {
     buttonColor = "bg-red-400";
     statusColor = "text-red-400";
   }
@@ -139,19 +141,21 @@ const ListOrder: React.FC<ListOrderProps> = ({
   let textDate = `Tenggat: ${formatDate(item.date, true)}`;
   if (item.finishedAt) {
     textDate = `Selesai: ${formatDate(item.finishedAt, true)}`;
-  } else if (item.isDeleted) {
-    textDate = `Dibatalkan: ${formatDate(item.updatedAt, true)}`;
+  } else if (item.cancelledAt) {
+    textDate = `Dibatalkan: ${formatDate(item.cancelledAt, true)}`;
   }
 
   const onPress = () => {
-    if (!item.finishedAt && !item.isDeleted) {
+    if (!item.finishedAt && !item.cancelledAt) {
       trackOrder(item);
     }
   };
 
-  const isLoading = loadingIds.includes(item.id);
+  const isLoadingTrack = trackIds.includes(item.id);
+  const isLoadingCancel = cancelIds.includes(item.id);
 
-  const isAbleToCancel = !item.startedAt && !item.isDeleted;
+  const isAbleToCancel =
+    !item.startedAt && !item.cancelledAt && !item.finishedAt;
 
   return (
     <Pressable
@@ -166,7 +170,7 @@ const ListOrder: React.FC<ListOrderProps> = ({
         />
         <View className="flex flex-row justify-between items-center w-[75%]">
           <View className="flex flex-col">
-            <ThemedText className="text-black line-clamp-1" numberOfLines={1}>
+            <ThemedText className="text-black " numberOfLines={1}>
               {name}
             </ThemedText>
             <ThemedText>{item.partner.name}</ThemedText>
@@ -212,7 +216,11 @@ const ListOrder: React.FC<ListOrderProps> = ({
                     onPress={onClickDel}
                   >
                     <ThemedText className="text-white text-sm">
-                      Batalkan
+                      {isLoadingCancel ? (
+                        <ActivityIndicator color="white" />
+                      ) : (
+                        "Batalkan"
+                      )}
                     </ThemedText>
                   </Pressable>
                 )}
@@ -221,7 +229,7 @@ const ListOrder: React.FC<ListOrderProps> = ({
                   onPress={onPress}
                 >
                   <ThemedText className="text-white text-sm">
-                    {isLoading ? (
+                    {isLoadingTrack ? (
                       <ActivityIndicator color="white" />
                     ) : (
                       buttonText
@@ -265,7 +273,7 @@ const useOrders = () => {
     setData(res.data.data);
     setLoading(false);
     setSelected(null);
-    setLoadingIds([]);
+    setTrackIds([]);
   };
 
   useFocusEffect(
@@ -274,12 +282,15 @@ const useOrders = () => {
     }, [])
   );
 
-  const [loadingIds, setLoadingIds] = useState<string[]>([]);
+  const [trackIds, setTrackIds] = useState<string[]>([]);
+  const [cancelIds, setCancelIds] = useState<string[]>([]);
 
   const trackOrder = async (item: Order) => {
     try {
-      if (loadingIds.includes(item.id)) return;
-      setLoadingIds([...loadingIds, item.id]);
+      if (trackIds.includes(item.id)) return;
+      if (cancelIds.includes(item.id)) return;
+      if (item.finishedAt || item.cancelledAt) return;
+      setTrackIds([...trackIds, item.id]);
       const res = await api.post<Api<Order>>(`/orders/${item.id}/track`);
       await fetchData();
       toastSuccess(res.data.message);
@@ -287,7 +298,7 @@ const useOrders = () => {
       console.log(error);
       toastError(error);
     } finally {
-      setLoadingIds([]);
+      setTrackIds([]);
     }
   };
 
@@ -302,16 +313,20 @@ const useOrders = () => {
   const handleCancel = async () => {
     try {
       if (!selectedDel) return;
-      onClickDel(null);
-      const res = await api.delete<Api<Order>>(`/orders/${selectedDel}`);
+      if (trackIds.includes(selectedDel)) return;
+      if (cancelIds.includes(selectedDel)) return;
+      setCancelIds([...cancelIds, selectedDel]);
+      setOpenDel(false);
+      const res = await api.post<Api<Order>>(`/orders/${selectedDel}/cancel`);
       await fetchData();
       toastSuccess(res?.data?.message);
     } catch (error) {
       console.log(error);
       toastError(error);
     } finally {
-      setSelectedDel(null);
       setOpenDel(false);
+      onClickDel(null);
+      setCancelIds([]);
     }
   };
 
@@ -333,7 +348,8 @@ const useOrders = () => {
     selectedSection,
     sections,
     trackOrder,
-    loadingIds,
+    trackIds,
+    cancelIds,
     Confirmation,
     onClickDel,
     selectedDel,

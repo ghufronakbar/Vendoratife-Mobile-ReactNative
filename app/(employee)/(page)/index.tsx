@@ -1,6 +1,7 @@
 import { ThemedText } from "@/components/ThemedText";
 import { FloatingAddButton } from "@/components/ui/FloatingAddButton";
 import { Img } from "@/components/ui/Img";
+import ModalConfirmation from "@/components/ui/ModalConfirmation";
 import api from "@/config/api";
 import { toastError, toastSuccess } from "@/helper/toast";
 import { useProfile } from "@/hooks/useProfile";
@@ -31,7 +32,11 @@ const HomeOrderScreen = () => {
     onClickSection,
     sections,
     selectedSection,
-    loadingIds,
+    Confirmation,
+    cancelIds,
+    onClickDel,
+    selectedDel,
+    trackIds,
     trackOrder,
   } = useOrders();
 
@@ -44,10 +49,7 @@ const HomeOrderScreen = () => {
           className="flex flex-row space-x-4 w-full px-4 py-4 items-center relative z-20"
           onPress={toggleSetting}
         >
-          <ThemedText
-            type="title"
-            className="line-clamp-1 font-omedium max-w-[70%]"
-          >
+          <ThemedText type="title" className=" font-omedium max-w-[70%]">
             Hi, {profile.name}
           </ThemedText>
           <Entypo name="chevron-thin-down" size={18} />
@@ -82,7 +84,7 @@ const HomeOrderScreen = () => {
           )}
         </Pressable>
 
-        <View className="flex flex-row space-x-2">
+        <View className="flex flex-row">
           {sections.map((item, index) => (
             <TouchableOpacity
               className={`px-4 py-2 h-12 rounded-lg flex flex-col`}
@@ -113,15 +115,15 @@ const HomeOrderScreen = () => {
               item={item}
               expanded={selected === item.id}
               onClickExpand={onClickExpand}
-              loadingIds={loadingIds}
+              trackIds={trackIds}
+              cancelIds={cancelIds}
               trackOrder={trackOrder}
+              onClickDel={() => onClickDel(item.id)}
             />
           )}
         />
-        <FloatingAddButton
-          onPress={() => router.push("/(employee)/(page)/form-order")}
-        />
       </SafeAreaView>
+      <Confirmation />
     </RefreshControl>
   );
 };
@@ -130,15 +132,19 @@ interface ListOrderProps {
   item: Order;
   expanded: boolean;
   onClickExpand: (id: string) => void;
-  loadingIds: string[];
+  trackIds: string[];
+  cancelIds: string[];
   trackOrder: (item: Order) => void;
+  onClickDel: () => void;
 }
 const ListOrder: React.FC<ListOrderProps> = ({
   item,
   expanded,
   onClickExpand,
-  loadingIds,
+  trackIds,
+  cancelIds,
   trackOrder,
+  onClickDel,
 }) => {
   const name = item.orderItems
     .slice(0, 3)
@@ -147,16 +153,19 @@ const ListOrder: React.FC<ListOrderProps> = ({
 
   let buttonText = "";
   if (item.finishedAt) {
-    buttonText = "Pesanan Selesai";
+    buttonText = "Selesai";
   } else if (item.startedAt) {
     buttonText = "Selesai";
   } else {
     buttonText = "Mulai";
   }
+  if (item.cancelledAt) {
+    buttonText = "Dibatalkan";
+  }
 
   let buttonColor = "bg-custom-1";
   let statusColor = "text-custom-1";
-  if (new Date(item.date) < new Date()) {
+  if (item.cancelledAt) {
     buttonColor = "bg-red-400";
     statusColor = "text-red-400";
   }
@@ -164,15 +173,21 @@ const ListOrder: React.FC<ListOrderProps> = ({
   let textDate = `Tenggat: ${formatDate(item.date, true)}`;
   if (item.finishedAt) {
     textDate = `Selesai: ${formatDate(item.finishedAt, true)}`;
+  } else if (item.cancelledAt) {
+    textDate = `Dibatalkan: ${formatDate(item.cancelledAt, true)}`;
   }
 
-  const onPress = useCallback(() => {
-    if (!item.finishedAt) {
+  const onPress = () => {
+    if (!item.finishedAt && !item.cancelledAt) {
       trackOrder(item);
     }
-  }, [item]);
+  };
 
-  const isLoading = loadingIds.includes(item.id);
+  const isLoadingTrack = trackIds.includes(item.id);
+  const isLoadingCancel = cancelIds.includes(item.id);
+
+  const isAbleToCancel =
+    !item.startedAt && !item.cancelledAt && !item.finishedAt;
 
   return (
     <Pressable
@@ -187,7 +202,7 @@ const ListOrder: React.FC<ListOrderProps> = ({
         />
         <View className="flex flex-row justify-between items-center w-[75%]">
           <View className="flex flex-col">
-            <ThemedText className="text-black line-clamp-1" numberOfLines={1}>
+            <ThemedText className="text-black " numberOfLines={1}>
               {name}
             </ThemedText>
             <ThemedText>{item.partner.name}</ThemedText>
@@ -226,14 +241,34 @@ const ListOrder: React.FC<ListOrderProps> = ({
               <ThemedText className={`text-sm ${statusColor}`}>
                 {textDate}
               </ThemedText>
-              <TouchableOpacity
-                className={`w-fit h-fit px-6 py-2 rounded-xl ${buttonColor}`}
-                onPress={onPress}
-              >
-                <ThemedText className="text-white">
-                  {isLoading ? <ActivityIndicator color="white" /> : buttonText}
-                </ThemedText>
-              </TouchableOpacity>
+              <View className="flex flex-row space-x-2">
+                {isAbleToCancel && (
+                  <Pressable
+                    className={`w-fit h-fit px-3 py-2 rounded-xl bg-red-400`}
+                    onPress={onClickDel}
+                  >
+                    <ThemedText className="text-white text-sm">
+                      {isLoadingCancel ? (
+                        <ActivityIndicator color="white" />
+                      ) : (
+                        "Batalkan"
+                      )}
+                    </ThemedText>
+                  </Pressable>
+                )}
+                <Pressable
+                  className={`w-fit h-fit px-3 py-2 rounded-xl ${buttonColor}`}
+                  onPress={onPress}
+                >
+                  <ThemedText className="text-white text-sm">
+                    {isLoadingTrack ? (
+                      <ActivityIndicator color="white" />
+                    ) : (
+                      buttonText
+                    )}
+                  </ThemedText>
+                </Pressable>
+              </View>
             </View>
           </View>
         </View>
@@ -247,7 +282,7 @@ const useOrders = () => {
   const [d, setData] = useState<Order[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [selectedSection, setSelectedSection] = useState("Mendatang");
-  const sections = ["Mendatang", "Dalam Proses", "Selesai"];
+  const sections = ["Mendatang", "Dalam Proses", "Selesai", "Dibatalkan"];
 
   const data = d.filter((item) => item.status === selectedSection);
 
@@ -269,6 +304,8 @@ const useOrders = () => {
     const res = await api.get<Api<Order[]>>("/orders");
     setData(res.data.data);
     setLoading(false);
+    setSelected(null);
+    setTrackIds([]);
   };
 
   useFocusEffect(
@@ -277,12 +314,15 @@ const useOrders = () => {
     }, [])
   );
 
-  const [loadingIds, setLoadingIds] = useState<string[]>([]);
+  const [trackIds, setTrackIds] = useState<string[]>([]);
+  const [cancelIds, setCancelIds] = useState<string[]>([]);
 
   const trackOrder = async (item: Order) => {
     try {
-      if (loadingIds.includes(item.id)) return;
-      setLoadingIds([...loadingIds, item.id]);
+      if (trackIds.includes(item.id)) return;
+      if (cancelIds.includes(item.id)) return;
+      if (item.finishedAt || item.cancelledAt) return;
+      setTrackIds([...trackIds, item.id]);
       const res = await api.post<Api<Order>>(`/orders/${item.id}/track`);
       await fetchData();
       toastSuccess(res.data.message);
@@ -290,9 +330,45 @@ const useOrders = () => {
       console.log(error);
       toastError(error);
     } finally {
-      setLoadingIds(loadingIds.filter((id) => id !== item.id));
+      setTrackIds([]);
     }
   };
+
+  const [openDel, setOpenDel] = useState(false);
+  const [selectedDel, setSelectedDel] = useState<string | null>(null);
+
+  const onClickDel = (id: string | null) => {
+    setSelectedDel(id);
+    setOpenDel(!openDel);
+  };
+
+  const handleCancel = async () => {
+    try {
+      if (!selectedDel) return;
+      if (trackIds.includes(selectedDel)) return;
+      if (cancelIds.includes(selectedDel)) return;
+      setCancelIds([...cancelIds, selectedDel]);
+      setOpenDel(false);
+      const res = await api.post<Api<Order>>(`/orders/${selectedDel}/cancel`);
+      await fetchData();
+      toastSuccess(res?.data?.message);
+    } catch (error) {
+      console.log(error);
+      toastError(error);
+    } finally {
+      setOpenDel(false);
+      onClickDel(null);
+      setCancelIds([]);
+    }
+  };
+
+  const Confirmation = () => (
+    <ModalConfirmation
+      onConfirm={handleCancel}
+      setShowAlert={setOpenDel}
+      showAlert={openDel}
+    />
+  );
 
   return {
     data,
@@ -304,10 +380,13 @@ const useOrders = () => {
     selectedSection,
     sections,
     trackOrder,
-    loadingIds,
+    trackIds,
+    cancelIds,
+    Confirmation,
+    onClickDel,
+    selectedDel,
   };
 };
-
 const useHome = () => {
   const [isSetting, setIsSetting] = useState(false);
 

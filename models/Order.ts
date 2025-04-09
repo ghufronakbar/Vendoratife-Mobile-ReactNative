@@ -9,6 +9,7 @@ export interface Order {
   note: string | null;
   startedAt: Date | null;
   finishedAt: Date | null;
+  cancelledAt: Date | null;
   partnerId: string;
   partner: Partner;
   isDeleted: boolean;
