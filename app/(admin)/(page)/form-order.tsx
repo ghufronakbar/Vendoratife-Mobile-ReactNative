@@ -358,6 +358,17 @@ const useOrder = () => {
           throw new Error("Harap isi semua data");
         }
       });
+      formItem.forEach((item, index) => {
+        const duplicateIndex = formItem.findIndex(
+          (otherItem, otherIndex) =>
+            otherIndex !== index && otherItem.productId === item.productId
+        );
+        if (duplicateIndex !== -1) {
+          throw new Error(
+            `Terdapat produk duplikat, harap jadikan satu pesanan`
+          );
+        }
+      });
       if (pending || loading) return;
       setPending(true);
       const res = await api.post<Api<Order>>(`/orders`, {

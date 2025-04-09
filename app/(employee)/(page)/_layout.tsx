@@ -44,10 +44,10 @@ const EmployeePageLayout = () => {
           name="index"
           options={{ title: "Home", headerShown: false }}
         />        
-        <Stack.Screen
+        {/* <Stack.Screen
           name="form-order"
           options={{ title: "Buat Pesanan", headerShown: true }}
-        />
+        /> */}
         <Stack.Screen
           name="profile"
           options={{ title: "Edit Profile", headerShown: true }}
